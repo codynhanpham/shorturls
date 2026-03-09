@@ -1,5 +1,6 @@
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Funnel+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 
+@import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -81,9 +82,13 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    font-family: "Funnel Sans", sans-serif;
   }
   body {
     @apply bg-background text-foreground;
+  }
+  html, body {
+    @apply h-full;
   }
   button {
     @apply cursor-pointer;

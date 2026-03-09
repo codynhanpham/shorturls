@@ -30,7 +30,7 @@
 >
     <form method="POST" use:enhance>
         <FieldGroup>
-            <div class="flex flex-col items-center gap-2 text-center">
+            <div class="flex flex-col items-center gap-1 text-center">
                 <a
                     href="/"
                     class="flex flex-col items-center gap-2 font-medium"
@@ -42,7 +42,7 @@
                     </div>
                     <span class="sr-only">Short URLs favicon</span>
                 </a>
-                <h1 class="text-xl font-bold">Short URLs</h1>
+                <h1 class="text-xl font-bold">Shorten your URLs</h1>
                 <FieldDescription>
                     Admin? Sign in below
                 </FieldDescription>

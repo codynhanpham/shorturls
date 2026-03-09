@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ActionData } from './$types';
 
-	import LoginForm from '$lib/components/blocks/login/login-form.svelte';
+	import LoginForm from '$src/routes/login/login-form.svelte';
 	
 	let { form }: { form?: ActionData } = $props();
 </script>
