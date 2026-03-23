@@ -1,15 +1,15 @@
-import Dexie, { type EntityTable } from "dexie"
+import Dexie, { type EntityTable } from "dexie";
 
+import type { ShortUrlDBEntry } from "$lib/types/shorturls";
 
-export type ShortUrlDBEntry = {
-    key: string; // The short URL key
-    url: string; // The original long URL
-    createdAt: string; // Creation date as ISO string
-    modifiedAt: string; // Last modified date as ISO string
-    title?: string; // Optional title of the webpage at the URL
-    description?: string; // Optional description of the webpage at the URL
-    tags?: string[]; // Optional array of tags associated with the URL
+type ShortUrlsDexie = Dexie & {
+    shortUrls: EntityTable<ShortUrlDBEntry, "key">;
+};
 
-    // https://developers.cloudflare.com/kv/api/write-key-value-pairs/#expiring-keys
-    expiration: number | null; // Expiration timestamp in seconds since epoch (to match KV specs), or null if it never expires
-}
+export const shortUrlsDB = new Dexie("shorturls") as ShortUrlsDexie;
+
+shortUrlsDB.version(1).stores({
+    shortUrls: "key, modifiedAt, expiration, *tags"
+});
+
+export type { ShortUrlDBEntry } from "$lib/types/shorturls";

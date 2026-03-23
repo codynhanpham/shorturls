@@ -18,7 +18,7 @@ Every record will have an associated metadata that tracks the last modified time
 
 After that, most operations are performed on the local IndexedDB, and synching only happens on request (e.g., when a new URL is shortened, or an existing one is modified/deleted).
 
-If there are more than 1000 records (the maximum number of records that can be returned by a single `list()` operation), only the first 1000 records will be automatically fetched on the initial load. To view the rest of the records, manual pagination is required (i.e., clicking the "Load More" button at the bottom of the list) to trigger additional `list()` operations with the appropriate `cursor` parameter.
+If there are more than 1000 records (the maximum number of records that can be returned by a single `list()` operation), only the first 1000 records will be automatically fetched on the initial load. To view the rest of the records, manual pagination is required to trigger additional `list()` operations with the appropriate `cursor` parameter.
 
 A `Synchronize` button is also provided to allow users to manually trigger a full synchronization between the local IndexedDB and the Workers KV store.
 

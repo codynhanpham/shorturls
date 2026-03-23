@@ -26,7 +26,7 @@ export default {
         try {
             const result = await env.SHORT_URLS.get(key, {
                 type: "json",
-                cacheTtl: 60 * 60 * 24 * 30
+                cacheTtl: 60 * 60 * 24 * 180 // 6 months (~180 days)
             });
 
             if (result && result.url) {

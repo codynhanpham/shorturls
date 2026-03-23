@@ -14,14 +14,27 @@
 	let { children, data }: { children: any; data: any } = $props();
 	let isAuthenticated = $derived(data.user?.authenticated ?? false);
 
+	function focusFullUrlInput() {
+		const input = document.getElementById("full-url") as HTMLInputElement | null;
+		if (input) {
+			input.scrollIntoView({ behavior: "smooth", block: "center" });
+			input.focus();
+		}
+	}
 
+	function triggerManualSync() {
+		window.dispatchEvent(new CustomEvent("shorturls:manual-sync"));
+	}
 
 </script>
 
 {#if isAuthenticated}
 	<div class="app-layout relative h-full">
 		<nav class="fixed bottom-0 top-auto md:top-0 md:bottom-auto left-0 w-full h-(--header-height) flex items-center justify-center gap-1.5 p-2 z-99999">
-			<Button variant="outline" class="bg-background/40 backdrop-blur-xl rounded-xl h-full aspect-square md:aspect-auto border-accent-foreground/25 border text-base" title="Synchronize with Cloudflare KV">
+			<Button variant="outline" class="bg-background/40 backdrop-blur-xl rounded-xl h-full aspect-square md:aspect-auto border-accent-foreground/25 border text-base" title="Synchronize with Cloudflare KV" onclick={() => {
+				window.scrollTo({ top: 0, behavior: "smooth" });
+				triggerManualSync();
+			}}>
 				<CloudSync class="size-5.5" />
 				<span class="sr-only md:not-sr-only mb-px">Sync</span>
 			</Button>
@@ -30,16 +43,17 @@
 				<Button
 					class="bg-primary/85 hover:bg-primary"
 					title="Create new short URL"
+					onclick={focusFullUrlInput}
 				>
 					<CirclePlus class="size-4.5" />
 					<span>New</span>
 				</Button>
 				
 				<ButtonGroup.Root class="rounded-lg **:[button]:bg-background/50 **:[button]:hover:bg-accent/90 **:[button]:border-accent-foreground/20">
-					<Button variant="outline" class="" title="Scroll to top">
+					<Button variant="outline" class="" title="Scroll to top" onclick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
 						<ChevronUp class="size-4.5" />
 					</Button>
-					<Button variant="outline" class="" title="Scroll to bottom">
+					<Button variant="outline" class="" title="Scroll to bottom" onclick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })}>
 						<ChevronDown class="size-4.5" />
 					</Button>
 				</ButtonGroup.Root>
@@ -58,9 +72,9 @@
 			</form>
 		</nav>
 
-		<main class="pb-(--header-height) md:pb-0 md:pt-(--header-height) h-full max-w-prose sm:max-w-[70ch] md:max-w-[78ch] lg:max-w-[90ch] xl:max-w-[105ch] 2xl:max-w-[120ch] mx-auto px-4">
+		<div class="pb-(--header-height) pt-4 md:pb-4 md:pt-(--header-height) h-auto max-w-prose sm:max-w-[78ch] md:max-w-[90ch] lg:max-w-[104ch] xl:max-w-[120ch] 2xl:max-w-[138ch] mx-auto px-4">
 			{@render children()}
-		</main>
+		</div>
 	</div>
 {:else}
 	{@render children()}

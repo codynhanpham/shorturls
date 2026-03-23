@@ -314,7 +314,8 @@
 
 <div
 	class={cn(
-		'border-input bg-background selection:bg-primary dark:bg-input/30 relative flex min-h-[36px] w-full flex-wrap place-items-center gap-1 rounded-md border py-0.5 pr-1 pl-1 disabled:opacity-50 aria-disabled:cursor-not-allowed',
+		'border-input bg-background selection:bg-primary dark:bg-input/30 ring-offset-background relative flex min-h-9 w-full flex-wrap place-items-center gap-1 rounded-md border py-0.5 pr-1 pl-1 shadow-xs transition-[color,box-shadow] outline-none disabled:opacity-50 aria-disabled:cursor-not-allowed',
+		'focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]',
 		className
 	)}
 	aria-disabled={disabled}
@@ -340,7 +341,7 @@
 		aria-activedescendant={suggestionIndex !== undefined
 			? `${listboxId}-${suggestionIndex}`
 			: undefined}
-		class="placeholder:text-muted-foreground min-w-16 shrink grow basis-0 border-none bg-transparent px-2 outline-hidden focus:outline-hidden disabled:cursor-not-allowed data-[invalid=true]:text-red-500 md:text-sm"
+		class="placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground min-w-16 shrink grow basis-0 border-none bg-transparent px-2 outline-hidden focus:outline-hidden disabled:cursor-not-allowed data-[invalid=true]:text-red-500 md:text-sm"
 	/>
 	{#if showSuggestions}
 		<div
