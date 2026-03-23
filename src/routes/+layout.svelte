@@ -9,6 +9,7 @@
 	<link rel="icon" href={favicon} />
 	<!-- Disallow crawling of all pages -->
 	<meta name="robots" content="noindex, nofollow" />
+	<title>Short URLs</title>
 </svelte:head>
 
 {@render children()}

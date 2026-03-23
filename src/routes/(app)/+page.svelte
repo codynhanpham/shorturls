@@ -133,7 +133,6 @@
 		displayedEntries = entries.sort(
 			(a, b) => new Date(b.modifiedAt).getTime() - new Date(a.modifiedAt).getTime()
 		);
-		console.log("Refreshed displayed entries", displayedEntries);
 	};
 
 	const readLastSyncAtMs = () => {
@@ -268,6 +267,10 @@
 
 	
 </script>
+
+<svelte:head>
+	<title>Dashboard - Short URLs</title>
+</svelte:head>
 
 <main class="h-auto">
     <!-- Add New -->

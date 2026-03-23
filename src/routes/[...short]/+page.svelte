@@ -134,6 +134,10 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Redirecting... - Short URLs</title>
+</svelte:head>
+
 <main class="min-h-screen flex items-center justify-center p-6">
 	<p class="text-sm text-muted-foreground">{statusMessage}</p>
 </main>
