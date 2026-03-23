@@ -17,4 +17,9 @@
             "id": "7eb6e961fca04d1495fd5561985a1e17",
         },
     ],
+    "keep_vars": true,
+    "vars": {
+        "PUBLIC_HOSTNAME": "cnp.is",
+        "PUBLIC_REDIRECT_FALLBACK_BASE": "codynhanpham.com",
+    }
 }
