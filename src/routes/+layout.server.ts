@@ -5,7 +5,8 @@ export const load: LayoutServerLoad = async ({ locals, route, url }) => {
 	// Public routes should remain accessible without auth.
 	if (url.pathname === '/login' || url.pathname === '/logout') {
 		return {
-			user: locals.user
+			user: locals.user,
+			sessionIssuedAt: Date.now()
 		};
 	}
 
@@ -17,6 +18,7 @@ export const load: LayoutServerLoad = async ({ locals, route, url }) => {
 	}
 
 	return {
-		user: locals.user
+		user: locals.user,
+		sessionIssuedAt: Date.now()
 	};
 };

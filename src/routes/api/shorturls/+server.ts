@@ -32,7 +32,11 @@ const isShortUrlDBEntry = (value: unknown): value is ShortUrlDBEntry => {
 	);
 };
 
-export const GET: RequestHandler = async ({ platform, url }) => {
+export const GET: RequestHandler = async ({ platform, url, locals }) => {
+	if (!locals.user?.authenticated) {
+		return json({ error: 'Unauthorized.' }, { status: 401 });
+	}
+
 	const kv = getKvBinding(platform);
 	if (!kv) {
 		return json(
@@ -57,7 +61,11 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 	return json(page);
 };
 
-export const POST: RequestHandler = async ({ platform, request }) => {
+export const POST: RequestHandler = async ({ platform, request, locals }) => {
+	if (!locals.user?.authenticated) {
+		return json({ error: 'Unauthorized.' }, { status: 401 });
+	}
+
 	const kv = getKvBinding(platform);
 	if (!kv) {
 		return json(
@@ -94,7 +102,11 @@ export const POST: RequestHandler = async ({ platform, request }) => {
 	}
 };
 
-export const DELETE: RequestHandler = async ({ platform, url }) => {
+export const DELETE: RequestHandler = async ({ platform, url, locals }) => {
+	if (!locals.user?.authenticated) {
+		return json({ error: 'Unauthorized.' }, { status: 401 });
+	}
+
 	const kv = getKvBinding(platform);
 	if (!kv) {
 		return json(

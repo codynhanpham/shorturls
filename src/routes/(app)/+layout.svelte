@@ -10,9 +10,35 @@
         LogOut,
         Search,
 	} from "@lucide/svelte";
+	import { DURATION_MINUTES } from '$lib/auth';
 
 	let { children, data }: { children: any; data: any } = $props();
 	let isAuthenticated = $derived(data.user?.authenticated ?? false);
+	let idleLogoutForm: HTMLFormElement;
+
+	let lastRenewed = $state(Date.now());
+
+	// Sync when layout data refreshes (navigations, form actions re-run load)
+	$effect(() => {
+		lastRenewed = data.sessionIssuedAt;
+	});
+
+	// Idle logout countdown — resets on any authenticated server request
+	$effect(() => {
+		if (!isAuthenticated) return;
+
+		const IDLE_TIMEOUT_MS = DURATION_MINUTES * 60 * 1000;
+		const remaining = Math.max(0, lastRenewed + IDLE_TIMEOUT_MS - Date.now());
+		const timer = setTimeout(() => idleLogoutForm.requestSubmit(), remaining);
+
+		const onRenewed = () => { lastRenewed = Date.now(); };
+		window.addEventListener('session:renewed', onRenewed);
+
+		return () => {
+			clearTimeout(timer);
+			window.removeEventListener('session:renewed', onRenewed);
+		};
+	});
 
 	function focusFullUrlInput() {
 		const input = document.getElementById("full-url") as HTMLInputElement | null;
@@ -27,6 +53,8 @@
 	}
 
 </script>
+
+<form bind:this={idleLogoutForm} action="/logout" method="POST" aria-hidden="true" style="display:none"></form>
 
 {#if isAuthenticated}
 	<div class="app-layout relative h-full">

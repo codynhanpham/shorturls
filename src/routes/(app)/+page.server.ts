@@ -111,7 +111,10 @@ export const load: PageServerLoad = async ({ platform }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ platform, request }) => {
+	default: async ({ platform, request, locals }) => {
+		if (!locals.user?.authenticated) {
+			return fail(401, { error: 'Unauthorized.', fields: emptyCreateShortUrlFields(), fieldErrors: {} });
+		}
 		const kv = platform?.env?.SHORT_URLS;
 		const formData = await request.formData();
 

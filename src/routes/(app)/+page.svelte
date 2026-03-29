@@ -171,6 +171,7 @@
 		try {
 			await syncShortUrls();
 			writeLastSyncAtMs(Date.now());
+			window.dispatchEvent(new Event('session:renewed'));
 			await refreshDisplayedEntries();
 		} catch (error) {
 			console.error("Background sync failed", error);
@@ -193,6 +194,7 @@
 
 		try {
 			await deleteShortUrl(entry.key);
+			window.dispatchEvent(new Event('session:renewed'));
 			await refreshDisplayedEntries();
 		} catch (error) {
 			console.error("Failed to delete short URL", error);
