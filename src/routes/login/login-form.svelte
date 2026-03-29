@@ -1,6 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
-    import { Link } from '@lucide/svelte';
+    import { Link, LoaderCircle } from '@lucide/svelte';
     import type { HTMLAttributes } from "svelte/elements";
     import {
         FieldGroup,
@@ -21,6 +21,8 @@
     }: WithElementRef<HTMLAttributes<HTMLDivElement>> & { form?: any } = $props();
     
     const id = crypto.getRandomValues(new Uint8Array(4)).toString();
+
+    let loading = $state(false);
 </script>
 
 <div
@@ -28,7 +30,13 @@
     bind:this={ref}
     {...restProps}
 >
-    <form method="POST" use:enhance>
+    <form method="POST" use:enhance={() => {
+        loading = true;
+        return async ({ update }) => {
+            await update();
+            loading = false;
+        };
+    }}>
         <FieldGroup>
             <div class="flex flex-col items-center gap-1 text-center">
                 <a
@@ -55,6 +63,7 @@
                     type="password"
                     placeholder="Enter your password"
                     class="rounded-md"
+                    autofocus
                     required
                 />
                 {#if form?.error}
@@ -62,7 +71,13 @@
                 {/if}
             </Field>
             <Field>
-                <Button type="submit">Login</Button>
+                <Button type="submit" disabled={loading}>
+                    {#if loading}
+                        <LoaderCircle class="mr-1 animate-spin"/> Logging in...
+                    {:else}
+                        Log in
+                    {/if}
+                </Button>
             </Field>
         </FieldGroup>
     </form>
