@@ -198,7 +198,7 @@
 			await refreshDisplayedEntries();
 		} catch (error) {
 			console.error("Failed to delete short URL", error);
-			entriesError = error instanceof Error ? error.message : "Failed to delete short URL.";
+			entriesError = error instanceof Error ? error.message : "Failed to delete short URL";
 		} finally {
 			deletingEntryKey = null;
 		}
@@ -219,7 +219,7 @@
 				await refreshDisplayedEntries();
 			} catch (error) {
 				console.error("Failed to load short URLs from Dexie", error);
-				entriesError = "Failed to load short URL entries from local cache.";
+				entriesError = "Failed to load short URL entries from local cache";
 			} finally {
 				isEntriesLoading = false;
 			}
@@ -437,10 +437,10 @@
 		{:else if isEntriesLoading}
 			<p class="mt-1 text-sm text-muted-foreground">Loading entries from local cache...</p>
 		{:else if displayedEntries.length === 0}
-			<p class="mt-1 text-sm text-muted-foreground">No short URLs found.</p>
+			<p class="mt-1 text-sm text-muted-foreground">No short URLs found</p>
 		{:else}
 			<p class="mt-1 text-sm text-muted-foreground">
-				Showing {displayedEntries.length} synced entries from local cache.
+				Showing {displayedEntries.length} synced entries from local cache
 			</p>
 
 			{#if isBackgroundSyncing}
