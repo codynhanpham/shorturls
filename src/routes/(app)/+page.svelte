@@ -25,7 +25,7 @@
 		toZoned,
 		type ZonedDateTime
 	} from "@internationalized/date";
-	import { onMount, untrack } from "svelte";
+	import { onMount, tick, untrack } from "svelte";
 
 	import { CornerDownLeft, CornerDownRight, Delete, LoaderCircle, Copy, Trash2 } from "@lucide/svelte";
 
@@ -214,6 +214,7 @@
 		void (async () => {
 			isEntriesLoading = true;
 			entriesError = null;
+			await tick();
 
 			try {
 				await refreshDisplayedEntries();

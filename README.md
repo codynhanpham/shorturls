@@ -1,4 +1,5 @@
 # Short URLs
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/codynhanpham/shorturls)
 
 A URL shortener built with SvelteKit for deploying on Cloudflare Workers.
 
@@ -33,6 +34,28 @@ If both the URL Shortener UI and the Redirector Worker are deployed to the same 
 
 
 ## Deployment
-TBA
+### Automatic Deployment with Cloudflare
+You can use the [`Deploy to Cloudflare`](https://developers.cloudflare.com/workers/platform/deploy-buttons/) button to automatically configure and deploy the project to your Cloudflare account.
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/codynhanpham/shorturls)
+
+You will be asked to set up some *environment* and ***secret*** variables during the deployment process (also, see [.env.example](./.env.example) for reference).
+
+#### Environment Variables
+- `PUBLIC_HOSTNAME`: The hostname where the URL Shortener UI will be accessible (e.g., `shorturls.example.com`). This is also used for constructing the shortened URLs.
+- `PUBLIC_REDIRECT_FALLBACK_BASE` *(optional)*: The base URL for fallback redirection when a requested shortened URL is not found (e.g., `https://example.com`). The worker will redirect to this base URL with the same original path (along with hash or query parameters) as the requested shortened URL.
+
+#### Secret Variables
+
+- `PASSWORD`: Your admin password for accessing the URL Shortener UI.
+- `SECRET`: A random string used for signing auth tokens. You can generate a random string using a command like `openssl rand -hex 32` in your terminal.
 
 
+### Manual Deployment
+If you prefer to deploy the project manually, you can follow these steps:
+1. Fork this repository and (optionally) make your customizations.
+2. Go to your Cloudflare dashboard and Create a new Worker.
+3. Select `Continue with GitHub` and connect your GitHub account if you haven't already.
+4. Select your forked repository and the branch you want to deploy from.
+5. Set up the required *environment* and ***secret*** variables in the Cloudflare dashboard similar to the [Automatic Deployment](#automatic-deployment-with-cloudflare) section.
+6. Deploy the Worker and access the URL Shortener UI at the specified `PUBLIC_HOSTNAME`.
