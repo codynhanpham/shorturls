@@ -205,7 +205,7 @@
     <Kbd class="h-fit text-lg font-bold p-2 py-0.5 mr-2 min-[29rem]:mr-3 sm:mx-4">OR</Kbd>
 
     <div class="w-full min-[52ch]:w-auto h-full flex flex-row gap-3 flex-wrap shrink-0">
-        <div class="w-full min-[29rem]:w-[16ch] h-max flex flex-col gap-1.5 shrink-0">
+        <div data-slot="input-date" class="w-full min-[29rem]:w-[16ch] h-max flex flex-col gap-1.5 shrink-0">
             <Label for={`${id}-date`} class="px-1">{dateLabel}</Label>
             <Popover.Root bind:open>
                 <Popover.Trigger id={`${id}-date`}>
@@ -236,7 +236,7 @@
                 </Popover.Content>
             </Popover.Root>
         </div>
-        <div class="w-full min-[29rem]:w-[16ch] h-max flex flex-col gap-1.5 shrink-0">
+        <div data-slot="input-time" class="w-full min-[29rem]:w-[16ch] h-max flex flex-col gap-1.5 shrink-0">
             <Label for={`${id}-time`} class="px-1">{timeLabel}</Label>
             <Input
                 type="time"

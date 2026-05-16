@@ -64,6 +64,11 @@ const normalizeTags = (values: string[] | undefined) => {
 	return tags.length > 0 ? tags : undefined;
 };
 
+const toPlainShortUrlEntry = (entry: ShortUrlDBEntry): ShortUrlDBEntry => ({
+	...entry,
+	...(entry.tags ? { tags: [...entry.tags] } : {})
+});
+
 const getMetadataMillis = (value: string, fallback: number) => {
 	const parsed = Date.parse(value);
 	return Number.isNaN(parsed) ? fallback : parsed;
@@ -204,7 +209,7 @@ export const readCachedShortUrl = async (key: string): Promise<ShortUrlDBEntry |
 
 export const upsertShortUrlInCache = async (entry: ShortUrlDBEntry): Promise<void> => {
 	const table = await getShortUrlsTable();
-	await table.put(entry);
+	await table.put(toPlainShortUrlEntry(entry));
 };
 
 export const upsertShortUrlsInCache = async (entries: ShortUrlDBEntry[]): Promise<void> => {
@@ -213,7 +218,7 @@ export const upsertShortUrlsInCache = async (entries: ShortUrlDBEntry[]): Promis
 	}
 
 	const table = await getShortUrlsTable();
-	await table.bulkPut(entries);
+	await table.bulkPut(entries.map(toPlainShortUrlEntry));
 };
 
 export const deleteShortUrlFromCache = async (key: string): Promise<void> => {

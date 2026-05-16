@@ -27,7 +27,7 @@
 	} from "@internationalized/date";
 	import { onMount, tick, untrack } from "svelte";
 
-	import { CornerDownLeft, CornerDownRight, Delete, LoaderCircle, Copy, Trash2 } from "@lucide/svelte";
+	import { CornerDownLeft, CornerDownRight, Delete, LoaderCircle, Copy, Trash2, SquarePen } from "@lucide/svelte";
 
 	import { env } from "$env/dynamic/public";
 	import { cn } from "$src/lib/utils";
@@ -69,9 +69,22 @@
 	let tags = $state<string[]>(untrack(() => formState.fields?.tags ?? []));
 	let isSubmitting = $state(false);
 	let deletingEntryKey = $state<string | null>(null);
+	let editingEntryKey = $state<string | null>(null);
+	let isEditingSaving = $state(false);
+	let isEditingEphemeral = $state(false);
+	let editError = $state<string | null>(null);
 	let lastCreatedKey = $state<string | null>(null);
 	let highlightFirstEntry = $state(false);
 	let highlightTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
+	// Edit form state
+	let editFormData = $state<{
+		url: string;
+		title: string;
+		description: string;
+		tags: string[];
+		expiration: ZonedDateTime | undefined;
+	} | null>(null);
 
 	let isEphemeral: boolean = $state(untrack(() => formState.fields?.isEphemeral ?? false));
 
@@ -201,6 +214,74 @@
 			entriesError = error instanceof Error ? error.message : "Failed to delete short URL";
 		} finally {
 			deletingEntryKey = null;
+		}
+	};
+
+	const startEditEntry = (entry: ShortUrlDBEntry) => {
+		editingEntryKey = entry.key;
+		editError = null;
+		isEditingEphemeral = entry.expiration !== null;
+		editFormData = {
+			url: entry.url,
+			title: entry.title ?? "",
+			description: entry.description ?? "",
+			tags: entry.tags ?? [],
+			expiration: entry.expiration 
+				? parseAbsoluteToLocal(new Date(entry.expiration * 1000).toISOString()) 
+				: defaultEphemeralExpiration()
+		};
+	};
+
+	const cancelEditEntry = () => {
+		editingEntryKey = null;
+		editFormData = null;
+		editError = null;
+		isEditingEphemeral = false;
+	};
+
+	const saveEditedEntry = async (entry: ShortUrlDBEntry) => {
+		if (!editFormData) return;
+
+		isEditingSaving = true;
+		editError = null;
+
+		try {
+			// Convert expiration to plain timestamp
+			let expirationTimestamp: number | null = null;
+			if (isEditingEphemeral && editFormData.expiration) {
+				expirationTimestamp = Math.floor(new Date(editFormData.expiration.toAbsoluteString()).getTime() / 1000);
+			}
+
+			const updatedEntry: ShortUrlDBEntry = {
+				...entry,
+				url: editFormData.url,
+				title: editFormData.title || undefined,
+				description: editFormData.description || undefined,
+				tags: editFormData.tags.length > 0 ? [...editFormData.tags] : undefined,
+				expiration: expirationTimestamp,
+				modifiedAt: new Date().toISOString()
+			};
+
+			const response = await fetch('/api/shorturls', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ entry: updatedEntry })
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to save changes');
+			}
+
+			await upsertShortUrlInCache(updatedEntry);
+			await refreshDisplayedEntries();
+			cancelEditEntry();
+			window.dispatchEvent(new Event('session:renewed'));
+		} catch (error) {
+			console.error("Failed to save edited entry", error);
+			editError = error instanceof Error ? error.message : "Failed to save changes";
+		} finally {
+			isEditingSaving = false;
 		}
 	};
 
@@ -352,7 +433,7 @@
 									<DateNTimePicker
 										bind:value={expirationDate}
 										id="expiration"
-										class="mt-2"
+										class="mt-2 **:[input]:bg-input/10"
 										nlpDateTimeLabel="Expiration datetime (NLP)"
 										datePlaceholder="Select date"
 										dateLabel="Expiration date"
@@ -450,85 +531,208 @@
 
 			<ul class="mt-3 space-y-2">
 				{#each displayedEntries as entry, index (entry.key)}
-					<li
-						class={cn(
-							"short-url-entry rounded-md border px-3 py-2 text-sm space-y-1.5 transition-colors duration-300",
-							index === 0 && highlightFirstEntry && "border-emerald-500 bg-emerald-500/5"
-						)}
-						id="shorturl-entry-{entry.key}"
-					>
-						<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-0">
-							<p class="font-medium text-lg">{entry.title || entry.key}</p>
-							<p class="text-xs text-muted-foreground">
-								Modified: <time datetime={entry.modifiedAt} title={new Date(entry.modifiedAt).toLocaleString()} class="cursor-help border-b border-dotted border-current">{formatRelativeTime(entry.modifiedAt)}</time>
-							</p>
-						</div>
-						
-						<CopyButton
-							text={`https://${env.PUBLIC_HOSTNAME}/${entry.key}`}
-							size="sm"
-							variant="outline"
-							animationDuration={500}
-							class="bg-transparent **:[svg]:size-3.5! max-w-full w-full sm:w-auto h-auto whitespace-normal! items-start justify-start"
-							>
-							{#snippet icon()}
-								<Copy />
-							{/snippet}
-							<span class="font-mono text-sm font-light w-full min-w-0 break-all text-left">
-								{`https://${env.PUBLIC_HOSTNAME}/${entry.key}`}
-							</span>
-						</CopyButton>
-
-						<p class="text-sm ml-2 text-muted-foreground flex items-start gap-1">
-							<CornerDownRight class="size-3.5 mt-0.5 shrink-0" />
-							<a
-								href={entry.url}
-								target="_blank"
-								rel="noopener"
-								class="w-fit min-w-0 break-all text-muted-foreground hover:underline [display:-webkit-box] line-clamp-4 sm:line-clamp-3 [-webkit-line-clamp:4] sm:[-webkit-line-clamp:3] [-webkit-box-orient:vertical] overflow-hidden"
-								title={entry.url}
-							>{entry.url}</a>
-						</p>
-
-						{#if entry.description}
-							<p class="font-normal">{entry.description}</p>
-						{/if}
-
-						{#if entry.tags && entry.tags.length > 0}
-							<div class="flex flex-wrap gap-1 pt-0.5">
-								{#each entry.tags as tag (tag)}
-									<span class="rounded bg-muted px-2 py-0.5 text-xs">{tag}</span>
-								{/each}
-							</div>
-						{/if}
-
-						<div class="mb-1 w-full flex flex-wrap items-center justify-between gap-2">
-							{#if entry.expiration !== null}
-								<p class="text-xs text-muted-foreground">
-									Expires: {new Date(entry.expiration * 1000).toLocaleString()} ({formatRelativeTime(new Date(entry.expiration * 1000).toISOString())})
-								</p>
+					{#if editingEntryKey === entry.key && editFormData}
+						<!-- Edit Mode -->
+						<li
+							class="short-url-entry rounded-md border px-3 py-3 text-sm space-y-2 border-blue-400/50 bg-blue-500/5"
+							id="shorturl-entry-{entry.key}"
+						>
+							<p class="font-medium text-lg text-blue-400">Editing: <strong class="font-mono">/{entry.key}</strong></p>
+							
+							{#if editError}
+								<p class="text-sm text-destructive">{editError}</p>
 							{/if}
-							<div class="ml-auto self-end flex items-center gap-1">
-								<!-- Delete Button -->
+
+							<Field.Group class="**:data-[slot='field']:gap-0.5!">
+								<Field.Field class="border-amber-500/30 focus-within:border-amber-500/90 active:border-amber-500/90">
+									<Field.Label for="edit-url-{entry.key}">Full URL</Field.Label>
+									<Input
+										id="edit-url-{entry.key}"
+										bind:value={editFormData.url}
+										placeholder="https://example.com/long-url"
+										class="mt-1 bg-input/15"
+										required
+									/>
+								</Field.Field>
+
+								<Field.Field class="border-cyan-500/30 focus-within:border-cyan-500/90 active:border-cyan-500/90">
+									<Field.Label for="edit-title-{entry.key}">Title</Field.Label>
+									<Input
+										id="edit-title-{entry.key}"
+										bind:value={editFormData.title}
+										placeholder="Title (optional)"
+										class="mt-1 bg-input/15"
+									/>
+								</Field.Field>
+
+								<Field.Field class="border-stone-500/30 focus-within:border-stone-500/90 active:border-stone-500/90">
+									<Field.Label for="edit-description-{entry.key}">Description</Field.Label>
+									<Textarea
+										id="edit-description-{entry.key}"
+										bind:value={editFormData.description}
+										placeholder="Description (optional)"
+										class="mt-1 bg-input/15 resize-none"
+										rows={3}
+									/>
+								</Field.Field>
+
+								<Field.Field class="border-purple-400/30 focus-within:border-purple-400/90 active:border-purple-400/90">
+									<Field.Label for="edit-tags-{entry.key}">Tags</Field.Label>
+									<TagsInput
+										id="edit-tags-{entry.key}"
+										bind:value={editFormData.tags}
+										placeholder="Add tags"
+										class="mt-1 bg-input/15 **:[input]:mt-0! **:[input]:bg-transparent!"
+									/>
+								</Field.Field>
+
+								<Field.Field class="border-0! items-end">
+									<div class="flex items-center gap-1.5">
+										<Switch bind:checked={isEditingEphemeral} id="edit-ephemeral-{entry.key}" class="cursor-pointer" />
+										<Field.Label for="edit-ephemeral-{entry.key}" class={cn("text-sm! text-muted-foreground cursor-pointer", isEditingEphemeral && "text-foreground")}>
+											Ephemeral
+										</Field.Label>
+									</div>
+								</Field.Field>
+
+								{#if isEditingEphemeral}
+									<Field.Field class="border-rose-500/30 focus-within:border-rose-500/90 active:border-rose-500/90">
+										<Field.Label for="edit-expiration-{entry.key}">Expiration</Field.Label>
+										<DateNTimePicker
+											bind:value={editFormData.expiration}
+											id="edit-expiration-{entry.key}"
+											class="mt-2 **:[input]:bg-input/10 **:data-[slot='input-date']:min-[29rem]:w-[18ch]! **:data-[slot='input-time']:min-[29rem]:w-[18ch]!"
+											nlpDateTimeLabel="Expiration datetime (NLP)"
+											datePlaceholder="Select date"
+											dateLabel="Expiration date"
+											timeLabel="Expiration time"
+										/>
+									</Field.Field>
+								{/if}
+							</Field.Group>
+
+							<div class="mt-3 flex items-center gap-2 justify-end flex-wrap">
 								<Button
 									type="button"
-									variant="destructive"
+									variant="outline"
 									size="sm"
 									class="bg-transparent border-border border"
-									disabled={deletingEntryKey === entry.key}
-									onclick={() => void handleDeleteEntry(entry)}
+									disabled={isEditingSaving}
+									onclick={cancelEditEntry}
 								>
-									{#if deletingEntryKey === entry.key}
+									Cancel
+								</Button>
+								<Button
+									type="button"
+									size="sm"
+									class="bg-blue-600 hover:bg-blue-700 text-white border-0"
+									disabled={isEditingSaving || !editFormData.url.trim()}
+									onclick={() => void saveEditedEntry(entry)}
+								>
+									{#if isEditingSaving}
 										<LoaderCircle class="mr-1 size-3.5 animate-spin" />
-										Deleting...
+										Saving...
 									{:else}
-										<Trash2 class="mr-1 size-3.5" />
-										Delete
+										Save Changes
 									{/if}
 								</Button>
 							</div>
-						</div>
-					</li>
+						</li>
+					{:else}
+						<!-- View Mode -->
+						<li
+							class={cn(
+								"short-url-entry rounded-md border px-3 py-2 text-sm space-y-1.5 transition-colors duration-300",
+								index === 0 && highlightFirstEntry && "border-emerald-500 bg-emerald-500/5"
+							)}
+							id="shorturl-entry-{entry.key}"
+						>
+							<div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-0">
+								<p class="font-medium text-lg">{entry.title || entry.key}</p>
+								<p class="text-xs text-muted-foreground">
+									Modified: <time datetime={entry.modifiedAt} title={new Date(entry.modifiedAt).toLocaleString()} class="cursor-help border-b border-dotted border-current">{formatRelativeTime(entry.modifiedAt)}</time>
+								</p>
+							</div>
+							
+							<CopyButton
+								text={`https://${env.PUBLIC_HOSTNAME}/${entry.key}`}
+								size="sm"
+								variant="outline"
+								animationDuration={500}
+								class="bg-transparent **:[svg]:size-3.5! max-w-full w-full sm:w-auto h-auto whitespace-normal! items-start justify-start"
+								>
+								{#snippet icon()}
+									<Copy />
+								{/snippet}
+								<span class="font-mono text-sm font-light w-full min-w-0 break-all text-left">
+									{`https://${env.PUBLIC_HOSTNAME}/${entry.key}`}
+								</span>
+							</CopyButton>
+
+							<p class="text-sm ml-2 text-muted-foreground flex items-start gap-1">
+								<CornerDownRight class="size-3.5 mt-0.5 shrink-0" />
+								<a
+									href={entry.url}
+									target="_blank"
+									rel="noopener"
+									class="w-fit min-w-0 break-all text-muted-foreground hover:underline [display:-webkit-box] line-clamp-4 sm:line-clamp-3 [-webkit-line-clamp:4] sm:[-webkit-line-clamp:3] [-webkit-box-orient:vertical] overflow-hidden"
+									title={entry.url}
+								>{entry.url}</a>
+							</p>
+
+							{#if entry.description}
+								<p class="font-normal">{entry.description}</p>
+							{/if}
+
+							{#if entry.tags && entry.tags.length > 0}
+								<div class="flex flex-wrap gap-1 pt-0.5">
+									{#each entry.tags as tag (tag)}
+										<span class="rounded bg-muted px-2 py-0.5 text-xs">{tag}</span>
+									{/each}
+								</div>
+							{/if}
+
+							<div class="mb-1 w-full flex flex-wrap items-center justify-between gap-2">
+								{#if entry.expiration !== null}
+									<p class="text-xs text-muted-foreground">
+										Expires: {new Date(entry.expiration * 1000).toLocaleString()} ({formatRelativeTime(new Date(entry.expiration * 1000).toISOString())})
+									</p>
+								{/if}
+								<div class="ml-auto self-end flex items-center gap-1">
+									<!-- Edit Button -->
+									<Button
+										type="button"
+										variant="outline"
+										size="sm"
+										class="bg-transparent border-border border"
+										disabled={deletingEntryKey === entry.key}
+										onclick={() => startEditEntry(entry)}
+									>
+										<SquarePen class="mr-1 size-3.5" />
+										Edit
+									</Button>
+
+									<!-- Delete Button -->
+									<Button
+										type="button"
+										variant="destructive"
+										size="sm"
+										class="bg-transparent border-border border"
+										disabled={deletingEntryKey === entry.key}
+										onclick={() => void handleDeleteEntry(entry)}
+									>
+										{#if deletingEntryKey === entry.key}
+											<LoaderCircle class="mr-1 size-3.5 animate-spin" />
+											Deleting...
+										{:else}
+											<Trash2 class="mr-1 size-3.5" />
+											Delete
+										{/if}
+									</Button>
+								</div>
+							</div>
+						</li>
+					{/if}
 				{/each}
 			</ul>
 		{/if}
