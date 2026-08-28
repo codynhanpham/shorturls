@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Button } from "$lib/components/ui/button/index.js";
 	import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
-    
+
 	import {
-    ChevronDown,
+    	ChevronDown,
         ChevronUp,
 		CirclePlus,
         CloudSync,
@@ -76,7 +76,7 @@
 					<CirclePlus class="size-4.5" />
 					<span>New</span>
 				</Button>
-				
+
 				<ButtonGroup.Root class="rounded-lg **:[button]:bg-background/50 **:[button]:hover:bg-accent/90 **:[button]:border-accent-foreground/20">
 					<Button variant="outline" class="" title="Scroll to top" onclick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
 						<ChevronUp class="size-4.5" />
@@ -85,13 +85,13 @@
 						<ChevronDown class="size-4.5" />
 					</Button>
 				</ButtonGroup.Root>
-				
+
 				<Button variant="secondary" class="bg-secondary/80 hover:bg-secondary border border-accent-foreground/20" title="Search short URLs">
 					<Search class="size-4.5" />
 					<span class="sr-only">Search</span>
 				</Button>
 			</div>
-			
+
 			<form action="/logout" method="POST" class="h-full">
 				<Button variant="outline" class="bg-background/40 backdrop-blur-xl h-full aspect-square border-accent-foreground/25 border hover:border-destructive/50 rounded-xl hover:bg-destructive/70 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60" title="Log out" type="submit">
 					<LogOut class="size-5.5" />

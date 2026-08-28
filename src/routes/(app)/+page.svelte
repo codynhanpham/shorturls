@@ -226,8 +226,8 @@
 			title: entry.title ?? "",
 			description: entry.description ?? "",
 			tags: entry.tags ?? [],
-			expiration: entry.expiration 
-				? parseAbsoluteToLocal(new Date(entry.expiration * 1000).toISOString()) 
+			expiration: entry.expiration
+				? parseAbsoluteToLocal(new Date(entry.expiration * 1000).toISOString())
 				: defaultEphemeralExpiration()
 		};
 	};
@@ -349,11 +349,13 @@
 		})();
 	});
 
-	
+
 </script>
 
 <svelte:head>
 	<title>Dashboard - Short URLs</title>
+	<description>Your own URL shortener, on the edge!</description>
+	<meta name="author" content="Cody Nhan Pham" />
 </svelte:head>
 
 <main class="h-auto">
@@ -538,7 +540,7 @@
 							id="shorturl-entry-{entry.key}"
 						>
 							<p class="font-medium text-lg text-blue-400">Editing: <strong class="font-mono">/{entry.key}</strong></p>
-							
+
 							{#if editError}
 								<p class="text-sm text-destructive">{editError}</p>
 							{/if}
@@ -653,7 +655,7 @@
 									Modified: <time datetime={entry.modifiedAt} title={new Date(entry.modifiedAt).toLocaleString()} class="cursor-help border-b border-dotted border-current">{formatRelativeTime(entry.modifiedAt)}</time>
 								</p>
 							</div>
-							
+
 							<CopyButton
 								text={`https://${env.PUBLIC_HOSTNAME}/${entry.key}`}
 								size="sm"
